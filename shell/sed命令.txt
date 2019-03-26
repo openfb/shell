@@ -1,0 +1,260 @@
+Linux处理文本文件的工具：
+	grep	过滤文件内容
+	sed		编辑文件内容
+	awk
+	
+		正则表达式Regex
+
+
+正则表达式Regex
+
+1)	匹配单个字符的元字符 
+	
+	.
+	
+	[abc]	[a-z]	[A-Z]	[0-9]	[a-zA-Z0-9]		[^a-z]	
+	
+	[[:space:]]		任意单个空白字符	
+		
+2) 匹配字符出现的位置
+	
+	^str 	str$	^$
+	^[^a-z]    
+
+3)	匹配字符出现的次数
+
+	*		ab* 
+	\?：0次或者1次      
+	\+：至少1次  
+	\{3\}	精确出现3次      ab\{3\}	
+	\{2,5\}	
+	\{2,\}
+	
+	\(  \)		分组 
+	
+
+
+	
+	
+sed: Stream Editor 流编辑器 
+
+	行编辑器 逐行编辑
+	
+将每行内容读入到内存中，在内存中进行处理，将结果返回给屏幕 ，此段内存空间称为模式空间
+
+默认不编辑原文件，仅对模式空间的数据进行处理，处理结束后，将模式空间的内容显示到屏幕 
+
+
+sed命令的使用格式
+
+# sed [option] scripts file1 file2 ...
+
+# sed [option] 'AddressCommand' file1 file2 ...
+	Address:表示对哪些行进行处理
+	Command：操作命令
+	
+	
+	option选项：
+		-n：不再显示模式空间中的内容(默认显示)
+		-i: 直接修改原文件
+		-e 'AddressCommand' -e 'AddressCommand'：同时执行多个匹配操作
+			[root@shell ~]# sed -e '/^#/d' -e '/^$/d' /etc/fstab 
+
+		-f FILE	将多个AddressCommand保存至文件中，每行一个AddressCommand；读取该文件中的操作同时执行多个操作 
+		
+			[root@shell ~]# cat /tmp/1.txt 
+				/^#/d
+				/^$/d
+			[root@shell ~]# sed -f /tmp/1.txt /etc/fstab 
+
+		
+		-r：表示使用扩展正则表达式 
+		
+			[root@shell ~]# sed -r  's|l(..e)|L\1|' /tmp/1.txt
+
+			
+		--follow-symlinks     修改软链接文件时 
+		 
+		[root@shell ~]# sed --follow-symlinks -i 's|hello|hi|' /tmp/2.txt 
+
+
+				
+			
+			
+	
+Address表示方法：
+
+1、StartLine,EndLine 
+	1,100
+	1,$				省略不写
+	3,10
+	
+2、LineNumber
+	3 
+
+3、StartLine,+n 
+	
+	5,+2 				/root/,+2
+
+4、/正则表达式/ 
+
+	/^#/
+	/root/ 
+
+
+5、 /正则表达式1/, /正则表达式2/
+
+	第1次被Regex1匹配的行开始，到第1次被Regex2匹配的行中间的所有行
+	
+
+
+	
+Command：
+
+d  删除符合条件的行
+  # sed '1,2d' /etc/inittab 
+	
+  删除文件中包含oot的行
+  # sed '/oot/d' /etc/fstab 
+	
+  删除第1行及其后2行
+  # sed '1,+2d' /etc/fstab 
+	
+  删除第1行
+  # sed '1d' /etc/fstab 
+  
+  删除以/开头的行
+  # sed '/^\//d' /etc/fstab 
+	
+p 显示符合条件的行
+  显示以/开头的行 
+  # sed -n '/^\//p' /etc/fstab 
+  
+a \string	在符合条件的行后追加新行，string为追加的内容
+  在以/开头的行后面追加# hello world 
+  # sed '/^\//a \# hello world' /etc/fstab 
+  
+  在以/开头的行后面追加两行内容，分别为# hello worl  # hello linux 
+  # sed '/^\//a \# hello world\n# hello linux' /etc/fstab 
+	
+i \string	在符合条件的行前添加新行，string为追加的内容
+   在文件第1行添加# hello world 
+   # sed '1i \# hello world' /etc/fstab 
+
+c \string 	替换指定行的内容
+   将文件中最后一行内容替换为End Of File
+   # sed '$c \End Of File' /1.txt 
+   
+   # sed '7c \SELINUX=disabled' /etc/sysconfig/selinux 
+
+ 
+ 
+=	用于显示每一行的行号
+	显示/etc/passwd文件最后一行的行号
+	# sed -n '$=' /etc/passwd
+	49
+   
+r file_name		将指定文件的内容添加到符合条件的行的后面   
+   在文件的第2行后追加/etc/issue文件的内容 
+   # sed '2r /etc/issue' /etc/fstab 
+   
+w file_name		将符合条件的内容另存到指定文件中
+   将以UUID开头的行另存为到/1.txt中
+   # sed '/^UUID/w /1.txt' /etc/fstab 
+   
+
+n  将光标跳转到下一行 
+
+[root@test_server ~]# sed -n 'p;n' /tmp/hostlist		>>>>显示文件的奇数行
+ 
+[root@test_server ~]# sed -n 'n;p' /tmp/hostlist 		>>>>显示文件的偶数行 
+
+[root@test_server ~]# sed '/datafile/{n;s/warn/info/}' /tmp/mysql.cnf
+
+[root@shell_server ~]# cat /tmp/mysql.cnf
+[main]
+loglevel=warn
+
+server_id=101
+datafile=/var/lib/mysql
+loglevel=warn
+
+   
+   
+   
+  
+s/regex/string/[修饰符]		查找并替换			默认情况下，只替换每一行第1次出现的字符
+
+
+   修饰符：
+	g：替换每一行所有的字符
+	i：忽略大小写
+	
+[root@localhost ~]# sed 's/^#/?/' /etc/fstab 
+
+
+   查找文件中的UUID，并替换为uuid
+   # sed 's/UUID/uuid/' /etc/fstab 
+   
+   将行首的/替换成#
+   # sed 's/^\//#/' /etc/fstab 
+   
+   [root@localhost ~]# sed 's|/|#|g' /etc/fstab 
+
+   
+   将每一行出现的所有/替换为@
+   # sed 's/\//@/g' /etc/fstab 
+   
+   反向引用 \(   \)   \1  \2 
+     
+   将文件中以l..e替换为l..er，例如love替换为lover
+   # sed 's/\(l..e\)/\1r/g' /etc/fstab 
+   或
+   # sed 's/l..e/&r/g' /etc/fstab 
+   &：引用正则表达式匹配的所有字符串
+   
+   将文件中l..e的单词替换为L..e，例如love替换为Love
+   # sed 's/l\(..e\)/L\1/' /1.txt 
+ 
+   删除行首的空格
+   [root@shellscript ~]# sed 's|^#||' /etc/fstab 
+
+   [root@shellscript ~]# history | sed 's|^[[:space:]]\+||'
+
+   
+
+y/旧内容/新内容/
+
+[root@test_server ~]# sed 'y/1238/abcd/' /tmp/hostlist 
+
+   
+   
+   
+   
+   
+   
+   
+ 
+练习：
+
+1、修改/etc/sysconfig/selinux将SELINUX=enforcing改为SELINUX=disabled 
+
+2、通过sed修改ssh配置文件/etc/ssh/sshd_config，实现如下
+	1) 修改默认端口
+	2) 禁止root用户登录 
+	3) 禁用密码认证
+	
+3、安装httpd，通过sed修改其配置文件，实现：
+
+	1) 修改默认端口
+	2) 指定服务器网站名称为localhost
+	
+	
+4、删除history命令行首所有空白 
+
+
+5、利用sed统计文件/etc/passwd文件行数 
+
+
+6、去除netstat -antp、df -hT命令结果的表头信息 
+

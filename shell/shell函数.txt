@@ -1,0 +1,242 @@
+函数 
+
+	作用：实现代码的重用性 
+	
+定义函数
+
+语法1) 
+
+函数名() {
+	....
+	....
+}
+
+语法2) 
+
+function 函数名称() {
+	.....
+	.....
+	.....
+}
+
+
+调用函数：
+
+	函数名称 
+	
+	
+示例：
+
+#!/bin/bash
+#
+
+# 定义函数 
+install_app() {
+    echo "执行安装httpd软件"
+}
+
+# 调用函数 
+install_app
+install_app
+install_app
+
+
+通过位置变量传递参数
+
+#!/bin/bash
+#
+
+
+install_app() {
+    echo "执行安装$1软件"
+}
+
+
+install_app
+install_app nginx
+install_app httpd
+install_app tomcat
+
+	
+	
+	
+示例： 
+
+用户管理
+1、创建用户
+2、删除用户
+3、修改用户的shell
+4、退出 
+
+
+#!/bin/bash
+#
+
+# 创建用户的函数
+
+create_user() {
+     read -p "用户名>>>" username
+     if ! id $username &> /dev/null; then
+          useradd $username
+          echo "redhat" | passwd --stdin $username &> /dev/null
+          echo "用户$username创建完成"
+     else
+          echo "用户$username存在"
+     fi
+}
+
+
+# 删除用户的函数
+
+remove_user() {
+     userdel -r $1 
+     echo "用户$1删除"
+}
+
+
+# 修改用户shell函数 
+
+modify_user() {
+    read -p "用户名>>> " username
+    if id $username &> /dev/null; then
+	read -p "new shell name: " new_shell
+        usermod -s $new_shell $username
+    else
+      echo "用户$username不存在"
+    fi
+}
+
+
+show_menu() {
+cat << eof
+用户管理
+1、创建用户
+2、删除用户
+3、修改用户的shell
+4、退出 
+eof
+}
+
+
+show_menu
+
+while true; do
+     read -p "选择>>> " choice
+     case $choice in
+          1)
+              create_user
+	      ;;
+	  2)
+	      read -p "用户名>>> " username
+              remove_user $username
+	      ;;
+	  3)
+	      modify_user
+              ;;
+          4)
+	      echo "- _ -!!!!"
+              exit 0
+	      ;;
+      	  *)
+	     echo "输入错误！！！！"
+	     echo
+             show_menu
+             ;; 
+       esac
+done
+
+
+
+
+
+字符处理
+
+1、截取 
+
+[root@shell_server ~]# str_01="abcdefg"
+[root@shell_server ~]# 
+[root@shell_server ~]# echo ${str_01:2:4}
+cdef
+[root@shell_server ~]# echo ${str_01:2}
+cdefg
+[root@shell_server ~]# echo ${str_01:3:1}
+d
+
+
+2、获取字符串长度 
+
+[root@shell_server ~]# str_01="abcde"
+[root@shell_server ~]# echo ${#str_01}
+5
+
+[root@shell_server ~]# str_01="hello world"
+[root@shell_server ~]# echo ${#str_01}
+11
+
+
+
+
+
+数组 Array
+
+	一段连续的内存空间
+	
+定义数组 
+
+方法1)
+
+[root@shell_server ~]# ip_list=(1.1.1.1 1.1.1.2 1.1.1.3 1.1.1.4)
+[root@shell_server ~]# 
+[root@shell_server ~]# echo $ip_list
+1.1.1.1
+[root@shell_server ~]# echo ${ip_list[*]}
+1.1.1.1 1.1.1.2 1.1.1.3 1.1.1.4
+
+[root@shell_server ~]# echo ${ip_list[2]}
+1.1.1.3
+[root@shell_server ~]# echo ${ip_list[3]}
+1.1.1.4
+[root@shell_server ~]# echo ${ip_list[1]}
+1.1.1.2
+[root@shell_server ~]# echo ${ip_list[0]}
+1.1.1.1
+
+
+方法2)
+
+[root@shell_server ~]# ip_list[0]=1.1.1.1
+[root@shell_server ~]# ip_list[1]=1.1.1.2
+[root@shell_server ~]# ip_list[2]=1.1.1.3
+[root@shell_server ~]# ip_list[10]=1.1.1.4
+[root@shell_server ~]# 
+[root@shell_server ~]# echo ${ip_list[*]}
+1.1.1.1 1.1.1.2 1.1.1.3 1.1.1.4 1.1.1.4
+[root@shell_server ~]# 
+[root@shell_server ~]# echo ${ip_list[2]}
+1.1.1.3
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

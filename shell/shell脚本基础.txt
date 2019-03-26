@@ -1,0 +1,364 @@
+shell脚本  
+
+	针对重复性
+	
+1、重定向符号的使用 
+
+	/dev/stdin		标准输入设备	(键盘)			0
+	/dev/stdout		标准输出设备	(显示器)		1
+	/dev/stderr		标准错误输出设备	(显示器)	2	
+
+1) 输出重定向 
+
+	a. 重定向标准输出 
+		>    覆盖
+		>>	 追加
+		
+		[root@test_server ~]# ls -l /etc/passwd > /tmp/a.txt 
+
+		[root@test_server ~]# ls -l /etc/fstab  >> /tmp/a.txt 
+
+		[root@test_server ~]# > /var/log/messages 		//清空文件内容 
+		
+	b. 重定向标准错误输出
+	
+		2>
+		
+	
+	c. 重定向标准输出、标准错误输出 
+
+		&>
+
+			/dev/null 
+			
+		[root@test_server ~]# ls -l /etc/fstab &> /dev/null 
+	
+		
+
+
+2) 输入重定向 
+
+	将文件内容替代键盘输入，作为命令的参数使用 
+	
+	< 
+
+	[root@test_server ~]# tr 'a-z' 'A-Z' < /tmp/test.txt
+
+	
+	
+
+2、输出语句 
+
+1) echo 
+	
+	输出单行信息
+
+	[root@test_server ~]# echo "hello world"
+
+	[root@test_server ~]# echo -e "openstack\npython"
+	openstack
+	python
+
+	[root@test_server ~]# echo -e "openstack\tpython"
+	openstack	python
+
+	
+2)　HERE DOCUMENT 
+
+	输出多行信息 
+
+[root@test_server ~]# cat << eof
+> 1、安装kvm
+> 2、卸载kvm
+> 3、安装python
+> 4、安装openstack
+> eof
+1、安装kvm
+2、卸载kvm
+3、安装python
+4、安装openstack
+
+
+	
+shell脚本中引号的区别：
+
+	双引号
+	
+		存在特殊字符时，会被转义
+	
+	单引号
+		所有字符会作为普通字符输出 
+		[root@test_server ~]# echo 'hello wolrd!!'
+		hello wolrd!!
+
+	
+	
+3、变量 
+
+	定义变量，相当于在内存中开辟一段内存空间
+	
+	增强脚本的灵活性 
+	
+类型：
+	自定义变量
+	环境变量
+	特殊变量
+	
+
+1、自定义变量
+
+	a. 定义变量 
+
+		变量名称=变量值 
+		
+	[root@test_server ~]# ip_address=192.168.1.1
+	[root@test_server ~]# file_name=/etc/fstab
+
+		变量名称的规范：
+			1、字母、数字、下划线_
+			2、不能与关键字冲突 
+			3、见名知义
+		
+		
+		
+		
+		
+	b. 调用变量 
+
+		$变量名称 
+		${变量名称}
+		
+	[root@test_server ~]# file_name=/etc/fstab
+	[root@test_server ~]# 
+	[root@test_server ~]# echo $file_name
+	/etc/fstab
+	[root@test_server ~]# echo ${file_name}
+	/etc/fstab
+
+	[root@test_server ~]# obj=host
+	[root@test_server ~]# echo "好多$objs"
+	好多
+	[root@test_server ~]# echo "好多${obj}s"
+	好多hosts
+
+		
+		注意：shell中调取一个不存在的变量时，会显示空 
+		
+		
+		
+		
+		
+		
+	c. 所有变量值默认会作为普通字符处理
+
+	[root@test_server ~]# a=10
+	[root@test_server ~]# b=20
+	[root@test_server ~]# c=a+b
+	[root@test_server ~]# echo $c
+	a+b
+	[root@test_server ~]# c=$a+$b
+	[root@test_server ~]# echo $c
+	10+20
+	 
+
+	做数学运算：
+
+			+, -, *, /, %
+			
+			$RANDOM		获取随机数 
+			
+			[root@test_server ~]# echo $((RANDOM%20))
+
+
+		1) $((数字表达式))
+		
+		[root@test_server ~]# a=10
+		[root@test_server ~]# b=20
+		[root@test_server ~]# c=$((a+b))
+		[root@test_server ~]# echo $c
+		30
+
+		2) 关键字  let 
+		
+		[root@test_server ~]# a=10
+		[root@test_server ~]# b=20
+		[root@test_server ~]# let c=a+b
+		[root@test_server ~]# echo $c
+		30
+
+		3) 关键字  declare 
+		
+		[root@test_server ~]# a=10
+		[root@test_server ~]# b=20
+		[root@test_server ~]# declare -i c=a+b
+		[root@test_server ~]# echo $c
+		30
+
+
+
+	d. 交互式变量赋值
+	
+	[root@test_server ~]# read -p "输入用户名：" username
+	输入用户名：martin
+
+	
+	e. 命令引用  
+	
+		$(command)
+		`command`
+
+	[root@test_server ~]# result=$(ls -l /etc/fstab)
+	[root@test_server ~]# echo $result
+	-rw-r--r-- 1 root root 465 12月 26 10:08 /etc/fstab
+
+	[root@test_server ~]# result=`ls -l /etc/fstab`
+	[root@test_server ~]# echo $result
+	-rw-r--r-- 1 root root 465 12月 26 10:08 /etc/fstab
+
+	
+	awk使用：
+	
+		默认以空白字符分割每一行内容 
+		
+		-F  指定行分隔符 
+	
+		[root@test_server ~]# ifconfig eth0 | grep netmask | awk '{print $2}'
+		192.168.122.101
+		[root@test_server ~]# ip_addre=$(ifconfig eth0 | grep netmask | awk '{print $2}')
+		[root@test_server ~]# echo $ip_addre
+		192.168.122.101
+
+		[root@test_server ~]# size=$(df -hT | grep /$ | awk '{print $5}')
+		[root@test_server ~]# echo $size
+		16G
+		
+		[root@test_server ~]# df -hT | grep "/$" | awk '{print $5,$7}'
+		16G /
+		
+		[root@test_server ~]# head -n 3 /etc/passwd | tail -n 1 | awk -F: '{print $6}'
+		/sbin
+
+
+
+
+2、环境变量 
+
+	用于记录操作系统的运行环境 
+	自定义环境变量(Java)
+
+	a. 查看环境变量 
+	
+		# env 
+		
+		示例1：修改系统语言
+		
+			[root@shell_server ~]# echo $LANG
+			zh_CN.UTF-8
+
+			[root@shell_server ~]# vim /etc/profile
+				export LANG=en_US.UTF-8
+
+			[root@shell_server ~]# source /etc/profile
+
+
+		示例2：在历史命令前显示时间
+		
+			export HISTTIMEFORMAT="%F_%T    "	
+
+			export HISTSIZE=500			//记录历史命令的数量 
+
+
+		示例3：修改命令提示符格式 
+		
+			export PS1="[\u@\H \w]\n$  \n"
+			
+				\u：用户名
+				\H: 主机名FQDN
+				\w：目录的绝对路径 
+				
+			
+	b. 自定义环境变量
+
+		export 环境变量名称=值 
+		
+		示例：安装tomcat，定义环境变量CATALINE_HOME 
+		
+		[root@shell_server etc]$ env | grep -i home
+		CATALINE_HOME=/app/tomcat
+		HOME=/root
+		[root@shell_server etc]$ tail -n 1 /etc/profile
+		export CATALINE_HOME=/app/tomcat
+
+
+
+3、特殊变量 
+
+	$?
+		用于记录上一条命令的执行状态 
+		
+		0---255
+		
+			0：执行成功 
+			
+			
+			
+			
+			
+示例01： 创建用户 
+
+
+
+	#!/bin/bash
+
+	useradd mike
+	echo "redhat" | passwd --stdin mike &> /dev/null
+	echo "用户mike创建完成"
+
+				
+	#!/bin/bash
+
+	username=robin
+	password=123
+
+	useradd $username
+	echo "$password" | passwd --stdin $username &> /dev/null
+	echo "用户$username创建完成"
+				
+				
+	#!/bin/bash
+
+	read -p "用户名： " username
+	read -p "密码： "  password
+
+	useradd $username
+	echo "$password" | passwd --stdin $username &> /dev/null
+	echo "用户$username创建完成"
+		
+			
+			
+	执行脚本 ：
+
+		1、bash 脚本文件
+		2、脚本文件添加执行权限，直接输入文件名执行
+			
+			
+			
+2) 关闭SELINUX
+		# setenforce 0  
+		# sed -i --follow-symlinks '7s/enforcing/disabled/' /etc/sysconfig/selinux 			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+		
+		
+	

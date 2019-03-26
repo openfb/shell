@@ -1,0 +1,83 @@
+expect工具的使用
+
+	捕获交互式命令的提示信息，完成自动化 
+	
+[root@shell_server ~]# yum install -y expect 
+
+
+expect独立使用：
+
+#!/usr/bin/expect
+
+spawn passwd martin
+expect "New password:"
+send "redhat\r"
+expect "Retype new password:"
+send "redhat\r"
+expect eof
+
+
+
+expect结合shell脚本的使用
+
+#!/bin/bash
+#
+
+useradd rain
+
+/usr/bin/expect << eof
+set timeout 10
+spawn passwd rain
+expect "New password:"
+send "123\r"
+expect "Retype new password:"
+send "123\r"
+expect eof
+eof
+
+
+
+
+脚本实现ssh的免密登录  
+
+#!/bin/bash
+#
+
+ssh-keygen -t rsa -P "" -f /root/.ssh/id_rsa &> /dev/null
+
+network=192.168.122.
+
+rm -rf /root/.ssh/known_hosts
+
+for i in 209 76 91 120; do
+	/usr/bin/expect <<-eof
+	spawn ssh-copy-id $network$i
+	expect "(yes/no)?"
+	send "yes\r"
+	expect "password:"
+	send "redhat\r"
+	expect eof
+	eof
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

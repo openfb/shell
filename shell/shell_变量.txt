@@ -1,0 +1,471 @@
+shell脚本  
+
+	创建的普通文本文件，shell命令 
+
+	1) 减少重复的工作
+	2) 自动执行一些操作 
+
+
+
+一、 重定向符号的使用 
+
+特殊文件：
+
+	/dev/stdin		标准输入设备		键盘		0 
+	/dev/stdout		标准输出设备		显示器		1
+	/dev/stderr		标准错误输出设备	显示器 		2
+
+
+输出重定向：
+
+1) >	用于重定向标准输出的
+   >>	追加文件内容 
+
+[root@shell_server ~]# ls -l /etc/fstab > /tmp/1.txt
+
+[root@shell_server ~]# > /var/log/messages
+
+[root@shell_server ~]# echo "hello world" > /tmp/index.html
+
+
+2) 2>  	用于重定向标准错误输出的
+
+	
+[root@shell_server ~]# ls -ldh /kkk 2> /tmp/2.txt
+
+
+3) &>	重定向所有信息
+
+[root@shell_server ~]# ls -l /etc/fstab  &> /tmp/3.txt
+
+[root@shell_server ~]# ls -ldh /kkk &> /tmp/3.txt 
+
+	
+		/dev/null 
+
+
+输入重定向：
+
+	< 
+	
+	将某一个文件的内容作为参数传递给命令执行 
+	
+[root@shell_server ~]# echo "python" > /tmp/1.txt
+[root@shell_server ~]# tr 'a-z' 'A-Z' < /tmp/1.txt 
+PYTHON
+
+
+
+
+二、输出语句 
+
+1、echo 
+
+[root@shell_server ~]# echo "hello world"
+hello world
+
+[root@shell_server ~]# echo "输入用户名： "
+输入用户名：
+
+
+[root@shell_server ~]# echo -n "hello world"			>>>取消换行 
+hello world[root@shell_server ~]# 
+
+
+转义符：
+	\n：换行
+	\t：tab空白 
+	
+[root@shell_server ~]# echo -e "hello\npython"
+hello
+python
+
+[root@shell_server ~]# echo -e "hello\tpython"
+hello	python
+
+
+
+双引号和单引号的区别：
+
+	双引号：
+		如果有特殊字符，会被转义
+	
+	单引号：
+		
+
+
+2、HERE DOCUMENT   
+
+   用于输出多行内容 
+   
+[root@shell_server ~]# cat << eof
+1、安装kvm
+2、重置centos 7
+3、重置centos 6
+eof
+
+
+
+
+
+三、awk的简单的使用 
+
+	默认按空白字符分割
+
+[root@shell_server ~]# ifconfig eth0 | grep "netmask" | awk '{print $2}' 
+192.168.122.101
+
+[root@shell_server ~]# ifconfig eth0 | grep "netmask" | awk '{print $2,$4}' 
+192.168.122.101 255.255.255.0
+
+
+[root@shell_server ~]# df -hT | grep "xfs" | awk '{print $1, $3, $7}'
+
+
+	-F	指定行分割符 
+	
+[root@shell_server ~]# head -n 1 /etc/passwd | awk -F: '{print $1, $6}'
+
+[root@shell_server ~]# ifconfig eth0 | grep "netmask" | awk '{print $2}' | awk -F. '{print $2}'
+
+
+
+
+四、变量 
+
+	增加脚本的灵活性 
+	
+	指的是内存中的一段空间
+	
+类型：
+
+	1、用户自定义变量
+	2、环境变量
+	3、特殊变量 
+	
+
+用户自定义变量
+
+1、定义变量 
+
+	变量名称=变量值 
+	
+[root@shell_server ~]# username=Martin
+[root@shell_server ~]# password=redhat
+
+变量名称规范：
+
+	1) 只能有数字、字母、下划线 
+	2) 只能以下划线、字母开头
+	3) 不能与shell的关键字冲突  
+	4) 见名知义 
+	
+	
+
+2、调用变量的值 
+
+	$变量名称 
+	${变量名称}
+	
+
+[root@shell_server ~]# username=Martin
+
+[root@shell_server ~]# echo "用户名是$username"
+用户名是Martin
+
+[root@shell_server ~]# echo "用户名是${username}"
+用户名是Martin
+
+
+[root@shell_server ~]# var_01=book
+
+[root@shell_server ~]# echo "There are some $var_01s"
+There are some 
+
+[root@shell_server ~]# echo "There are some ${var_01}s"
+There are some books
+
+
+shell中所有变量的值统一作为字符处理 
+
+[root@shell_server ~]# a=10
+[root@shell_server ~]# b=20
+[root@shell_server ~]# c=a+b
+[root@shell_server ~]# echo $c
+a+b
+[root@shell_server ~]# c=$a+$b
+[root@shell_server ~]# echo $c
+10+20
+[root@shell_server ~]# 
+
+
+3、使用变量的值作数字运算 
+
+
+数学运算符：
+
+	+ - * / %  
+	
+[root@shell_server ~]# a=10
+[root@shell_server ~]# b=4
+[root@shell_server ~]# let c=a/b
+[root@shell_server ~]# echo $c
+2
+[root@shell_server ~]# let c=a%b
+[root@shell_server ~]# echo $c
+2
+
+
+$RANDOM：生成随机数 
+
+
+
+
+1) $((数学运算式))
+
+[root@shell_server ~]# a=10
+[root@shell_server ~]# b=4
+[root@shell_server ~]# c=$((a+b))
+[root@shell_server ~]# echo $c
+14
+
+
+2) 关键字  let 
+
+[root@shell_server ~]# a=10
+[root@shell_server ~]# b=4
+[root@shell_server ~]# let c=a+b
+[root@shell_server ~]# echo $c
+14
+
+
+3) 关键字   declare 
+
+[root@shell_server ~]# a=10
+[root@shell_server ~]# b=4
+[root@shell_server ~]# declare -i c=a+b
+[root@shell_server ~]# echo $c
+14
+
+
+
+4、命令引用  
+
+方法1):  $(命令) 
+
+[root@shell_server ~]# ip_address=$(ifconfig eth0 | grep "netmask" | awk '{print $2}')
+[root@shell_server ~]# echo $ip_address
+192.168.122.101
+
+
+方法2):  反引号   `command`
+
+[root@shell_server ~]# number=`ls -l /etc/ | grep "^d" | wc -l`
+[root@shell_server ~]# echo $number
+78
+
+
+
+
+5、删除变量 
+
+[root@shell_server ~]# unset name
+
+
+
+
+
+环境变量 
+
+	定义系统或者应用程序的运行环境
+	
+	应用程序的环境变量：
+		
+		部署Java(Tomcat, MyCAT, Hadoop, HBase)的应用程序
+		
+查看系统现有的环境变量 
+
+[root@shell_server ~]# env 
+
+
+定义环境变量
+
+# export 变量名称=变量值 
+
+	环境变量名称全部大写 
+	
+默认临时的，可编辑/etc/profile可实现环境变量的永久生效 
+
+
+[root@shell_server ~]# export JAVA_HOME=/app/jdk1.8
+[root@shell_server ~]# env | grep -i home
+JAVA_HOME=/app/jdk1.8
+HOME=/root
+
+
+配置环境变量永久生效
+
+[root@shell_server ~]# vim /etc/profile
+
+	export JAVA_HOME=/app/jdk1.8
+
+
+[root@shell_server ~]# source /etc/profile
+[root@shell_server ~]# env | grep -i home
+JAVA_HOME=/app/jdk1.8
+
+
+PATH的变量的使用
+
+	用于保存命令路径  
+	
+添加apache的命令路径  
+
+[root@localhost ~]# vim /etc/profile
+
+	export PATH=$PATH:/usr/local/apache/bin
+
+[root@localhost ~]# source /etc/profile
+
+
+
+
+
+特殊变量 
+
+	$?	
+
+		判断上一条命令的执行状态 
+		
+		取值：0---255
+			
+			0：成功
+			
+
+
+
+示例01：创建用户
+
+[root@shell_server demo]# cat demo_01.sh 
+#!/bin/bash
+#
+
+read -p "输入用户名： " username
+read -p "输入密码：" password
+
+useradd $username
+echo "$password" | passwd --stdin $username &> /dev/null
+echo "用户$username创建完成"
+
+
+
+示例02：配置yum源 
+
+#!/bin/bash
+#
+
+read -p "输入yum源配置文件名称 ：" file_name
+
+cat << eof > /etc/yum.repos.d/$file_name
+[centos7.2]
+name=centos7.2
+baseurl=ftp://172.16.8.252/software/centos7.2
+enabled=1
+gpgcheck=0
+eof
+
+yum clean all &> /dev/null
+yum makecache &> /dev/null
+yum repolist
+
+
+
+
+示例03：配置主机的TCP/IP参数  
+
+
+#!/bin/bash
+#
+
+#修改主机名
+read -p "Enter hostname: " host_name
+hostnamectl set-hostname $host_name
+
+
+echo "network list: "
+ifconfig | grep -o "^eth[0-9]\+"
+echo
+
+
+read -p "NEC CARD NAME: " eth_name 
+read -p "IP address: "  ip_address 
+read -p "prefix: "  ip_mask
+read -p "gateway: " ip_gw
+read -p "primary dns: " ip_dns_01
+read -p "secondary dns: " ip_dns_02
+
+
+nmcli connection delete "Wired connection 1" &>/dev/null
+nmcli connection delete $eth_name &> /dev/null
+
+nmcli connection add type ethernet ifname $eth_name con-name $eth_name &> /dev/null
+nmcli connection modify $eth_name ipv4.addresses "$ip_address/$ip_mask" &> /dev/null
+nmcli connection modify $eth_name ipv4.gateway "$ip_gw" &> /dev/null
+nmcli connection modify $eth_name ipv4.dns "$ip_dns_01" &> /dev/null
+nmcli connection modify $eth_name +ipv4.dns "$ip_dns_02" &> /dev/null
+nmcli connection modify $eth_name ipv4.method manual
+
+nmcli connection reload &> /dev/null
+nmcli connection up $eth_name &> /dev/null
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	
+	
+
+
+
+	
+
+	
+	
+	
+	

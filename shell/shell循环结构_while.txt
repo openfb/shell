@@ -1,0 +1,226 @@
+while循环 
+
+语法1)
+
+while 条件; do
+	操作语句
+	操作语句
+done
+
+
+示例：计算1--100的和 
+
+#!/bin/bash
+#
+
+i=1
+
+sum=0
+
+while [ $i -le 100 ]; do
+     let sum=$sum+$i
+     let i++
+done
+
+echo $sum
+
+
+语法2) 
+
+while true; do
+	操作语句
+	操作语句
+done
+
+
+
+语法3) 遍历文件 
+
+while read line; do
+	操作语句
+	操作语句
+done < file_name 
+
+注意： 
+
+	通过管道给while read循环传数据时，循环会产生子shell， 数据传不出来 
+	
+	解决办法：
+		1) 采用临时文件 
+		2) 进程替换 
+
+
+
+
+
+
+
+
+
+
+
+
+示例01：2秒显示一次CPU平均负载 
+
+#!/bin/bash
+#
+
+while true; do
+    uptime
+    sleep 2
+done
+
+
+示例：
+
+#!/bin/bash
+#
+
+cat << eof
+openstack功能列表：
+1、安装nova
+2、安装neutron
+3、安装cinder
+4、退出
+
+eof
+echo
+
+while true; do
+	read -p "你的选择>>> " choice
+
+	case $choice in
+	    1)
+	      echo "执行安装nova操作"
+	      ;;
+	    2)
+	      echo "执行安装neutron操作"
+	      ;;
+	    3) 
+	      echo "执行安装cinder操作"
+	      ;;
+	    4)
+	      echo "Bye-Bye..... - _ -"
+	      exit 7
+	      ;;
+	    *)
+	      echo "输入错误，try again"
+              continue
+	      ;;
+	esac
+done
+
+
+示例： 
+
+#!/bin/bash
+#
+
+while true; do
+    read -p "输入密码: " pwd1
+    read -p "确认密码：" pwd2
+    if [ $pwd1 != $pwd2 ]; then
+          echo "密码不一致"
+          continue
+    else
+          echo "接收到正确密码...."
+          break
+    fi
+done
+
+
+
+====================终止循环的语句 =============================================================
+
+
+	continue
+		中断本次循环开始下一次
+		
+	break
+		中断整体循环
+
+
+#!/bin/bash
+#
+
+
+for i in $(seq 5); do
+    echo "第$i次循环开始"
+    echo "python-python-python-python"
+    if [ $i -eq 3 ]; then
+        break
+    fi
+    echo "第$i次循环结束"
+    echo "---------------------------------------"
+done
+
+
+===================================================================================================
+
+
+
+示例：统计/bin/bash, /sbin/nologin用户数量 
+
+#!/bin/bash
+#
+
+bash_number=0
+nologin_number=0
+
+while read line; do
+      shell_name=$(echo $line | awk -F: '{print $7}')
+      case $shell_name in
+           /bin/bash)
+               let bash_number++
+               ;;
+           /sbin/nologin)
+               let nologin_number++
+               ;;
+      esac
+done < /etc/passwd
+
+echo "bash用户数量：$bash_number, nologin用户数量: $nologin_number"
+
+
+
+
+示例：统计TCP连接状态的个数LISTEN, ESTABLISHED(进程替换传递数据)
+
+#!/bin/bash
+#
+
+listen_number=0
+established_number=0
+
+while read line; do
+       state=$(echo $line | awk '{print $6}')
+       case $state in
+           LISTEN)
+              let listen_number++ 
+              ;;
+           ESTABLISHED)
+              let established_number++
+              ;;
+       esac
+done < <(netstat -antp | grep "^tcp")
+
+echo "Listen: $listen_number, Established: $established_number"
+
+
+
+示例：统计磁盘使用率大于10%所有磁盘信息
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

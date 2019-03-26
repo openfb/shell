@@ -1,0 +1,482 @@
+shell逻辑控制语句 
+
+	条件判断 
+	循环
+	
+	
+1、条件判断 
+
+	if 
+	case
+
+	
+if条件判断
+
+	a) 语法一
+
+		if 条件; then
+			操作语句
+			操作语句 
+			...
+		fi
+
+
+	b) 语法二  单if分支 
+
+		if 条件; then
+			操作语句 
+			操作语句 
+		else
+			操作语句
+			操作语句
+		fi
+
+
+	c) 多分支的if 
+	
+		if 条件1; then 
+			操作语句
+			操作语句
+		elif 条件2; then 
+			操作语句
+			操作语句
+		elif 条件3; then 
+			操作语句 
+			操作语句 
+		else
+			操作语句
+			操作语句
+		fi 
+			
+	
+		多条件的写法：
+		
+			and	并且 
+				[ 条件1 -a 条件2 ]
+				[ 条件1 ] && [ 条件2 ]
+				
+			or	或者 
+				[ 条件1 -o 条件2 ]
+				[ 条件1 ] || [ 条件2 ]
+	
+	
+	d) 嵌套if
+	
+	if 条件; then 
+		操作语句
+		操作语句
+		if 条件; then 
+			操作语句
+			操作语句
+		else
+			操作语句
+			操作语句
+		fi
+	else 
+		操作语句
+		操作语句
+	if 
+	
+	
+	
+
+
+条件的写法：
+
+	1) shell命令
+	2) [ 条件表达式 ]
+		数字表达式
+		字符表达式
+		文件目录表达式
+
+
+	数字表达式
+
+		[ number_01 -eq number_02 ]				==
+		[ number_01 -ne number_02 ]				!=		
+		[ number_01 -gt number_02 ]				>				
+		[ number_01 -ge number_02 ]				>=		
+		[ number_01 -lt number_02 ]				<		
+		[ number_01 -le number_02 ]				!=		
+		
+		
+	字符表达式
+		[ str_01 == str_02 ]
+		[ str_01 != str_02 ]
+		[ -z str_01 ]			//判断是否空字符
+		
+
+	文件目录表达式
+	
+		[ -e 文件名称 ]		//判断文件是否存在 
+		[ -f 文件名称 ]		//是否为文本文件
+		[ -d 文件名称 ]		//是否为目录
+		[ -r 文件名称 ]
+		[ -w 文件名称 ]
+		[ -x 文件名称 ]
+		
+	所有单目表达式前面加!表示取反     [ ! -e 文件名称 ]
+
+
+	
+	
+
+示例：创建用户, 判断用户不存在，创建；
+
+#!/bin/bash
+#
+
+read -p "用户名>>>  " username
+
+grep "^${username}:" /etc/passwd &> /dev/null
+
+# 表示用户不存在 
+
+if [ $? -ne 0 ]; then
+    useradd $username
+    echo "redhat" | passwd --stdin $username &> /dev/null
+    echo "用户$username创建完成"
+fi 
+	
+	
+	
+	
+#!/bin/bash
+#
+
+read -p "用户名>>>  " username
+
+# 表示用户不存在 
+
+if ! grep "^${username}:" /etc/passwd &> /dev/null; then
+    useradd $username
+    echo "redhat" | passwd --stdin $username &> /dev/null
+    echo "用户$username创建完成"
+fi  
+	
+	
+	
+#!/bin/bash
+#
+
+read -p "用户名>>>  " username
+
+# 表示用户不存在 
+
+if ! grep "^${username}:" /etc/passwd &> /dev/null; then
+    useradd $username
+    echo "redhat" | passwd --stdin $username &> /dev/null
+    echo "用户$username创建完成" 
+else
+    echo "用户$username已经存在"
+fi  	
+	
+	
+	
+
+示例：判断用户uid, gid， 相同，good user， 不相同，bad user 
+
+#!/bin/bash
+#
+
+read -p "用户>>>  " username
+
+user_id=$(id -u $username)
+group_id=$(id -g $username)
+
+if [ $user_id -eq $group_id ]; then
+    echo "Good user"
+else
+    echo "Bad user"
+fi
+
+
+	
+示例： 检测网卡错误数据流量，错误数据大于100
+
+#!/bin/bash
+#
+
+eth0_error_number=$(ifconfig eth0 | grep "RX errors" | awk '{print $3}')
+
+if [ $eth0_error_number -gt 100 ]; then
+   echo "警告"
+else
+   echo "正常"
+fi
+
+
+
+示例： 检测磁盘脚本
+
+#!/bin/bash
+#
+
+echo "磁盘列表"
+df -hT | grep "^/dev" | awk '{print $1}'
+echo
+
+read -p "磁盘名称>>> " disk_name
+
+disk_use=$(df -hT | grep "$disk_name" | awk '{print $6}' | awk -F% '{print $1}')
+
+# 判断容量的百分比
+if [ $disk_use -gt 10 ]; then
+   echo "磁盘$disk_name容量告警"
+else
+   echo "磁盘$disk_name正常"
+fi
+	
+	
+	
+示例：检测web服务器状态 
+
+#!/bin/bash
+#
+
+stat_code=$(curl -I 192.168.122.101 2> /dev/null | grep "^HTTP" | awk '{print $2}')
+
+if [ $stat_code -eq 200 ]; then
+   echo "web service ok"
+elif [ $stat_code -eq 302 ]; then
+   echo "web service ok"
+elif [ $stat_code -eq 304 ]; then
+   echo "web service ok"
+else
+   echo "web service error"
+fi
+	
+	
+#!/bin/bash
+#
+
+stat_code=$(curl -I 192.168.122.101 2> /dev/null | grep "^HTTP" | awk '{print $2}')
+
+if [ $stat_code -eq 200 ] || [ $stat_code -eq 302 ] || [ $stat_code -eq 304 ]; then
+   echo "web service ok"
+else
+   echo "web service error"
+fi
+	
+	
+	
+示例：判断字符 
+
+#!/bin/bash
+#
+
+
+read -p "密码：" pwd1
+read -p "再次密码： " pwd2 
+
+if [ "$pwd1" == "$pwd2" ]; then
+    echo "相同"
+else
+    echo "不同"
+fi
+	
+	
+	
+
+示例： 修改判断用户id
+
+#!/bin/bash
+#
+
+read -p "用户名>>> " user_name
+
+if id $user_name &> /dev/null; then
+   # 获取uid, gid， 判断
+   user_id=$(id -u $user_name)
+   group_id=$(id -g $user_name)
+   if [ $user_id -eq $group_id ]; then
+        echo "good user"
+   else
+        echo "bad user"
+   fi
+else
+   echo "用户$user_name不存在 "
+fi
+
+	
+	
+示例：备份文件 
+
+#!/bin/bash
+#
+
+read -p "源文件>>> " file_name
+
+# 获取文件名
+f_name=$(basename $file_name)
+
+# 判断文件是否存在 
+
+if [ -e $file_name ]; then
+     # 获取备份目录
+     read -p "备份目录>>> " dir_name
+     if [ -d $dir_name ]; then
+          cp $file_name $dir_name/${f_name}_$(date +%F_%T)
+          echo "文件$file_name备份到$dir_name目录完成"
+     else
+	  mkdir $dir_name -p 
+          cp $file_name $dir_name/${f_name}_$(date +%F_%T)
+          echo "文件$file_name备份到$dir_name目录完成"
+      fi
+else
+   echo "文件$file_name不存在"
+fi
+
+
+	
+	
+
+	
+	
+	
+	
+	
+	
+case条件判断 
+
+	适用于变量有多种固定取值
+	
+语法：
+
+case 变量 in
+
+	值1)
+		操作语句
+		操作语句
+		;;
+	值2)
+		操作语句
+		操作语句
+		;;
+	值3)
+		操作语句
+		操作语句
+		;;
+	*)
+		操作语句
+		操作语句
+		;;
+esac
+	
+	
+位置变量：
+
+	$1, $2, $3.....$9, ${10}
+	
+		$1：代表第一个参数
+		
+	$0	脚本名称 
+	
+	$#	参数的个数 
+	
+	
+	
+	
+	
+	
+示例： 
+
+	判断用户输入：
+	
+		如果 redhat Redhat  显示Linux
+		如果 iis    IIS     显示windows
+		其他				显示other	
+	
+
+#!/bin/bash
+#
+
+read -p "数据>>> " str
+
+case $str in
+    redhat|Redhat)
+       echo "linux"
+       ;;
+    iis|IIS)
+       echo "windows"
+       ;;
+    *)
+       echo "other"
+       ;;
+esac
+
+
+
+#!/bin/bash
+#
+
+# 判断第一个参数是否为空
+if [ $# -ne 1 ]; then
+    echo "帮助：$(basename $0) <参数>"
+    exit 19
+fi
+
+case $1 in
+    redhat|Redhat)
+       echo "linux"
+       ;;
+    iis|IIS)
+       echo "windows"
+       ;;
+    *)
+       echo "other"
+       ;;
+esac
+
+
+
+
+示例： 编写源码httpd的服务脚本 
+
+#!/bin/bash
+#
+
+httpd_cmd=/app/httpd/bin/httpd
+httpd_pid_file=/app/httpd/logs/httpd.pid
+
+# 显示帮助信息
+
+if [ $# -ne 1 ]; then
+   echo "帮助: $0 {start|stop|restart|status|reload}"
+   exit 10
+fi
+
+
+case $1 in
+    start)
+      $httpd_cmd -k start
+      if [ $? -eq 0 ]; then
+         echo "服务httpd启动.........[ok]"
+      else
+         echo "服务httpd启动.........[failed],请检查日志"
+      fi
+      ;;
+    stop)
+      $httpd_cmd -k stop
+      ;;
+    restart)
+      $httpd_cmd -k stop
+      sleep 2
+      $httpd_cmd -k start
+      ;;
+    status)
+       if [ -e $httpd_pid_file ]; then
+            echo "httpd[pid $(cat $httpd_pid_file)] is running..."      
+       else
+            echo "httpd is stopped"
+       fi
+       ;;
+    reload)
+       kill -1 $(cat $httpd_pid_file)
+       ;;
+    *)
+       echo "帮助: $0 {start|stop|restart|status|reload}"
+       ;;
+esac
+
+

@@ -1,0 +1,358 @@
+shell循环 
+
+实现循环的语句：
+	
+	for, while, until
+	
+循环：
+	循环开始的条件
+	循环操作	
+	循环结束的条件
+	
+
+for循环 
+
+语法：
+
+1)  
+
+for 变量 in 取值列表; do
+	操作语句
+	操作语句
+done
+
+
+2)
+
+for 变量 in 取值列表
+do
+	操作语句
+	操作语句
+done 
+
+
+
+取值列表:
+	数字
+		seq 10
+		seq 1 10
+		seq 1 2 10
+	字符
+	文件名称
+		按回车键、空白键区别行 
+	
+
+
+示例：批量创建用户 user1...user10 
+
+#!/bin/bash
+#
+
+for i in $(seq 10); do
+    user_name=user$i
+    if id $user_name &> /dev/null; then
+        echo "用户$user_name存在！！"
+    else
+        useradd $user_name
+        echo "redhat" | passwd --stdin $user_name &> /dev/null
+        echo "用户$user_name创建完成，初始密码为redhat"
+    fi
+done
+
+
+
+
+
+user01 .... user10 
+
+#!/bin/bash
+#
+
+user_name=user0
+
+for i in $(seq 10); do
+    if [ $i -le 9 ]; then
+       if id $user_name$i &> /dev/null; then
+             echo "用户$user_name$i存在"
+       else
+             useradd $user_name$i
+             echo "redhat" | passwd --stdin $user_name$i &> /dev/null
+             echo "用户$user_name$i创建完成，初始密码为redhat"
+       fi
+    else
+	user_name=user
+        if id $user_name$i &> /dev/null; then
+             echo "用户$user_name$i存在"
+        else
+             useradd $user_name$i
+             echo "redhat" | passwd --stdin $user_name$i &> /dev/null
+             echo "用户$user_name$i创建完成，初始密码为redhat"
+        fi
+    fi
+done
+
+	
+	
+
+示例： 检测10.0.224.0/24网段在线的主机 
+
+#!/bin/bash
+#
+
+network=10.0.224.
+
+for i in $(seq 254); do
+     {
+     if ping -c 1 -W 1 $network$i &> /dev/null; then
+         echo "主机$network$i is up"
+     fi
+     }&
+done
+wait
+
+
+
+示例：搜集10.0.224.0/24主机的IP地址及MAC地址的对应关系 
+
+#!/bin/bash
+#
+
+local_ip=$(ifconfig enp2s0 | grep "netmask" | awk '{print $2}')
+local_mac=$(ifconfig enp2s0 | grep "ether" | awk '{print $2}')
+
+echo "本机IP： $local_ip,  本机MAC地址：$local_mac"
+
+network=10.0.224.
+
+for i in $(seq 254); do
+    {
+    if ping -c 1 -W 1 $network$i &> /dev/null; then
+	      ip_address=$(arping -I enp2s0 -c 1 -w 1 $network$i | grep "Unicast" | awk '{print $4}')
+		  mac_address=$(arping -I enp2s0 -c 1 -w 1 $network$i | grep "Unicast" | awk '{print $5}')
+		  echo "IP地址：$ip_address,  MAC地址: $mac_address"
+    fi
+	}&
+done
+wait
+
+
+
+示例： 创建10个文件，文件名随机 
+
+#!/bin/bash
+#
+
+for i in $(seq 10); do
+     touch /tmp/$(openssl rand -hex 10)
+done
+
+
+示例：批量重命名
+
+#!/bin/bash
+#
+
+for file_name in $(find /data -name "*.html"); do
+       old_file_name=$(echo $file_name | awk -F. '{print $1}')
+       new_file_name=${old_file_name}.jpg
+       mv $file_name $new_file_name
+done
+
+
+
+
+示例：创建以下用户
+	httpd, tomcat, nginx, hadoop
+
+#!/bin/bash
+#
+
+# 判断有没有参数
+
+if [ $# -ne 1 ]; then
+    echo "帮助：$0 <文件名称>"
+    exit 7
+fi
+
+# 判断文件不存在 
+
+if [ ! -e $1 ]; then
+   echo "文件不存在 "
+   exit 8
+fi
+
+# 创建用户
+
+for username in $(cat $1); do
+     useradd $username
+     echo "$username创建完成"
+done
+
+
+
+
+
+
+示例：配置主机的ssh免密登录 
+
+#!/bin/bash
+#
+
+if ! ls -l /root/.ssh | grep "id_rsa"; then
+     ssh-keygen -f "/root/.ssh/id_rsa" -P "" &> /dev/null
+fi
+
+for ip in 87 44; do
+/usr/bin/expect << eof
+spawn ssh-copy-id 192.168.122.$ip
+expect "(yes/no)?"
+send "yes\r"
+expect " password:"
+send "redhat\r"
+expect eof
+eof
+done
+
+
+
+
+[root@shell_server ~]# for i in 87 44; do
+> ssh 192.168.122.$i 'hostname'
+> ssh 192.168.122.$i 'rpm -q dhcp'
+> done
+node01
+未安装软件包 dhcp 
+node02
+未安装软件包 dhcp 
+
+
+
+
+
+
+
+=========================expect工具==================================
+
+作用：捕获交互式命令的提示信息, 发送不同的参数
+
+[root@shell_server ~]# yum install -y expect
+
+	spawn	捕获哪条命令
+	expect 	
+	send
+
+expect独立使用：
+
+#!/usr/bin/expect
+	
+spawn passwd user1				
+expect "New password:"			>>捕获提示信息
+send "redhat\r"					>>发送参数 
+expect "Retype new password:"
+send "redhat\r"
+expect eof						>>捕获结束 
+
+
+结合shell:
+
+#!/bin/bash
+#
+
+useradd king
+
+/usr/bin/expect << eof
+spawn passwd king
+expect "New password:"
+send "123\r"
+expect "Retype new password:"
+send "123\r"
+expect eof
+eof
+
+=====================================================================
+
+
+
+示例：同步目录文件 
+
+
+#!/bin/bash
+#
+
+src_dir=/opt/bj/
+dst_dir=/opt/sh/
+
+
+for file_name in $(ls -l /opt/bj/ | grep "txt$" | awk '{print $9}'); do
+      # 目的目录不存在的文件
+      if [ ! -e $dst_dir$file_name ]; then
+    	echo "文件$file_name不存在..............复制"
+        cp $src_dir$file_name $dst_dir$file_name
+      fi
+
+      # 内容不一致
+      src_full_file_name=$src_dir$file_name
+      dst_full_file_name=$dst_dir$file_name
+
+      src_file_md5=$(md5sum $src_full_file_name | awk '{print $1}')
+      dst_file_md5=$(md5sum $dst_full_file_name | awk '{print $1}')
+
+      if [ $src_file_md5 != $dst_file_md5 ]; then
+	    echo "文件$file_name数据不一致.........覆盖"
+	    \cp -af $src_full_file_name $dst_full_file_name
+      fi 
+done
+
+
+
+# 验证：
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

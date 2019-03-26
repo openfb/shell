@@ -1,0 +1,589 @@
+shell逻辑控制语句 
+
+	条件判断
+	循环 
+	
+	
+条件判断语句 
+
+	if
+	case
+	
+
+if语句 
+
+用法1):
+
+if 条件; then
+   操作语句
+   操作语句 
+fi    
+ 
+
+条件的写法：
+
+	1) 表达式		
+	
+		[ 条件 ]
+	
+	2) shell命令 
+	
+		判断的是命令的执行状态，即$?变量的值 
+		
+			
+
+
+表达式： 
+
+1) 数字表达式
+
+	[ num01 -eq num02 ]		-eq  等于 
+	[ num01 -ne num02 ]		-ne  不等于 
+	[ num01 -gt num02 ]		-gt  大于 
+	[ num01 -ge num02 ]		-ge  大于等于 
+	[ num01 -lt num02 ]		-lt  小于 
+	[ num01 -le num02 ]		-le  小于等于 
+
+	
+示例01：获取用户名，判断用户不存在， 则创建 
+
+#!/bin/bash
+#
+
+read -p "输入用户名：" name
+
+id $name &> /dev/null
+
+if [ $? -ne 0 ]; then
+     useradd $name
+     read -p "输入密码：" password
+     echo "$password" | passwd --stdin $name &> /dev/null
+     echo "用户$name创建完成，初始密码是$password"
+fi
+
+	
+
+或者 
+
+
+#!/bin/bash
+#
+
+read -p "输入用户名：" name
+
+if ! id $name &> /dev/null; then
+     useradd $name
+     read -p "输入密码：" password
+     echo "$password" | passwd --stdin $name &> /dev/null
+     echo "用户$name创建完成，初始密码是$password"
+fi
+
+
+2) 字符表达式
+3) 文件、目录表达式 
+	
+
+
+用法2): 单分支if 
+
+if 条件; then
+   操作语句
+   操作语句
+   ....
+else
+   操作语句 
+   操作语句 
+fi  
+
+
+示例：判断用户的uid与gid
+
+#!/bin/bash
+#
+
+read -p "Enter username: " name
+
+user_id=$(id -u $name)
+group_id=$(id -g $name)
+
+if [ $user_id -eq $group_id ]; then
+   echo "good user"
+else
+   echo "bad user"
+fi
+
+
+
+示例02：判断磁盘的剩余量小于30%，输出lower space， 否则normal 
+
+
+#!/bin/bash
+#
+
+echo "磁盘分区如下："
+df -hT | grep "^/dev" | awk '{print $1}'
+echo
+
+read -p "选择磁盘分区：" disk_name
+
+used_size=$(df -hT $disk_name | grep "^/" | awk '{print $6}' | awk -F% '{print $1}')
+
+if [ $used_size -gt 70 ]; then
+   echo "磁盘$disk_name剩余容量不足，请及时处理"
+else
+   echo "磁盘$disk_name正常"
+fi
+
+
+
+
+示例03：判断文件是否存在空行，有则显示空行个数，否则显示文件内容 
+
+#!/bin/bash
+#
+
+read -p "Enter file(绝对路径): "  file_name
+
+if grep "^$" $file_name &> /dev/null; then
+   line_number=$(grep "^$" $file_name | wc -l)
+   echo "文件$file_name空行数量：$line_number"
+else
+   echo "文件$file_name内容如下："
+   cat -n $file_name
+fi
+
+
+示例04：判断用户是否存在，存在则按如下格式显示用户信息；否则，提示用户不存在
+
+	用户名：
+	宿主目录：
+	shell名称：
+
+
+
+
+用法3) 多分支if 
+
+if 条件1; then
+   操作语句
+   操作语句
+elif 条件2; then 
+   操作语句
+   操作语句
+elif 条件3; then 
+   操作语句
+   操作语句
+else
+   操作语句 
+   操作语句  
+fi    
+
+
+多条件的写法：
+
+	逻辑运算符：
+		and, or, not 
+
+	and: 
+	
+		[ 条件1 -a 条件2 ]
+		[ 条件1 ] && [ 条件2 ]
+		
+	or：
+	
+		[ 条件1 -o 条件2 ]
+		[ 条件1 ] || [ 条件2 ]
+		
+
+示例01：获取系统时间，根据时间不同显示不同的结果 
+
+		6---8	morning
+		9---12	上午
+		13--16	下午
+		17--22	晚上
+	
+
+#!/bin/bash
+#
+
+hour=$(date +%H)
+
+if [ $hour -ge 6 -a $hour -le 8 ]; then
+   echo "早上"
+elif [ $hour -ge 9 -a $hour -le 12 ]; then
+   echo "上午"
+elif [ $hour -ge 13 -a $hour -le 16 ]; then
+   echo "下午"
+else
+   echo "晚上"
+fi
+
+
+
+
+条件表达式：
+
+1、数字
+2、字符表达式
+
+	[ str_01 == str_02 ]
+	[ str_01 != str_02 ]
+	[ -z str_01 ]			判断是否为空串 
+
+	
+#!/bin/bash
+#
+
+read -p "Enter password: " pwd1
+read -p "Enter password again: " pwd2
+
+if [ "$pwd1" == "$pwd2" ]; then
+   echo "ok"
+else
+   echo "failure, try again"
+fi
+
+
+3、文件目录表达式
+
+	[ -f file_name ]	判断是否为一个文件
+	[ -d file_name ]	判断是否为一个目录  
+	[ -e file_name ]	判断文件目录是否存在   
+	
+
+双目表达式 
+单目表达式， 所有的单目表达式都可以使用!表示取反   [ ! -f file_name ]
+
+
+用法4) 嵌套if 
+
+if 条件; then 
+	if 条件; then 
+		操作语句
+		操作语句
+	else
+		操作语句
+		操作语句 
+	fi 
+else 
+	操作语句 
+	操作语句 
+fi 
+
+
+
+示例01： 
+
+#!/bin/bash
+#
+
+read -p "Enter username: " name
+
+if id $name &> /dev/null; then
+   #判断id
+   user_id=$(id -u $name)
+   group_id=$(id -g $name)
+   if [ $user_id -eq $group_id ]; then
+       echo "good user"
+   else
+       echo "bad user"
+   fi
+else
+   echo "用户$name不存在"
+fi
+
+
+示例02：输入文件名，判断文件是否存在
+	
+		存在：输入备份目录名称，目录存在，复制文件；
+		如果目录不存在，创建目录， 复制文件 
+
+#!/bin/bash
+#
+
+read -p "输入源文件： " file_name
+
+if [ -f $file_name ]; then
+   #获取目录名称，备份文件
+   read -p "输入备份目录名称：" dir_name
+   if [ -d $dir_name ]; then
+      cp $file_name $dir_name
+      echo "文件$file_name已复制到$dir_name"
+   else
+      mkdir -p $dir_name
+      cp $file_name $dir_name
+      echo "文件$file_name已复制到$dir_name"
+   fi
+else
+   echo "文件$file_name不存在"
+fi
+	
+
+
+或
+
+
+#!/bin/bash
+#
+
+time=$(date +%F_%T)
+
+read -p "Enter file name: " file_name
+f_name=$(basename $file_name)
+
+#判断文件是否存在， 存在则开始复制；否则提示文件不存在
+if [ -f $file_name ]; then
+   read -p "Enter backup directory: " backup_dir
+   # 判断备份目录是否存在
+   if [ -d $backup_dir ]; then
+      #判断备份目录下是否存在同名的文件
+      if [ -f $backup_dir/$f_name ]; then
+           cp $backup_dir/$f_name $backup_dir/${f_name}_${time}
+           cp $file_name $backup_dir
+           echo "文件$file_name已复制到$backup_dir"
+      else
+           cp $file_name $backup_dir
+           echo "文件$file_name已复制到$backup_dir"
+      fi
+   else
+      mkdir -p $backup_dir
+      cp $file_name $backup_dir
+      echo "文件$file_name已复制到$backup_dir"
+   fi
+else
+   echo "文件$file_name不存在"
+fi
+
+
+
+=======================================================================================
+
+条件判断 ----  case 
+
+语法：
+
+case 变量 in 
+    取值1)
+		操作语句
+		操作语句
+		;;
+	取值2)
+		操作语句
+		操作语句
+		;;
+	取值3)
+		操作语句
+		操作语句
+		;;
+	*)
+		操作语句
+		操作语句 
+		;;
+esac 
+
+
+
+#!/bin/bash
+#
+
+read -p "Enter string: " str_01
+
+case $str_01 in
+   linux|Linux)
+     echo "CentOS"
+     ;;
+   windows|Windows)
+     echo "Microsoft"
+     ;;
+   *)
+     echo "Other"
+     ;;
+esac
+
+
+
+位置变量 
+
+	$0	
+
+	$1  $2  $3 .....  ${10}  ${11}
+	
+		$1：脚本的第一个参数
+
+	$#：参数的个数 
+		
+
+#!/bin/bash
+#
+
+if [ -z $1 ]; then
+   echo "帮助：$(basename $0) <arg>"
+   exit 9
+fi
+
+
+if [ $# -gt 1 ]; then
+   echo "帮助：$(basename $0) <arg>"
+   exit 7
+fi
+   
+case $1 in
+   linux|Linux)
+     echo "CentOS"
+     ;;
+   windows|Windows)
+     echo "Microsoft"
+     ;;
+   *)
+     echo "Other"
+     ;;
+esac
+
+
+
+
+示例：编写nginx服务控制脚本 
+
+	start|stop|restart|reload|status
+
+
+
+安装nginx
+
+[root@shell_server ~]# tar xf nginx-1.13.4.tar.gz 
+[root@shell_server ~]# cd nginx-1.13.4/
+[root@shell_server nginx-1.13.4]# ./configure --prefix=/usr/local/nginx 
+
+错误1：./configure: error: the HTTP rewrite module requires the PCRE library.
+
+解决办法：[root@shell_server nginx-1.13.4]# yum install -y pcre-devel
+
+
+错误2：./configure: error: the HTTP gzip module requires the zlib library.
+
+解决办法： [root@shell_server nginx-1.13.4]# yum install -y zlib-devel 
+
+[root@shell_server nginx-1.13.4]# make && make install 
+
+
+
+基本使用：
+
+1、启动服务 
+
+/usr/local/nginx/sbin/nginx 
+
+
+2、停止服务 
+
+/usr/local/nginx/sbin/nginx -s stop 
+
+
+3、重载配置文件 
+
+/usr/local/nginx/sbin/nginx -s reload 
+
+
+
+
+
+#!/bin/bash
+#Author:Martin
+
+nginx_cmd=/usr/local/nginx/sbin/nginx
+nginx_pid_file=/usr/local/nginx/logs/nginx.pid
+
+
+if [ $# -ne 1 ]; then
+   echo "Usage: $(basename $0) {start|stop|restart|status|reload}"
+   exit 7
+fi
+
+
+case $1 in
+   start)
+     #启动nginx服务
+     $nginx_cmd
+     if [ $? -eq 0 ]; then
+       echo "服务nginx启动.........[成功]"
+       touch /var/lock/subsys/nginx
+     else
+       echo "服务nginx启动.........[失败]"
+     fi  
+     ;;
+   stop)
+     #关闭nginx服务
+     $nginx_cmd -s stop
+     rm -rf /var/lock/subsys/nginx
+     ;;
+   restart)
+     #重启nginx服务
+     $nginx_cmd -s stop
+     sleep 2
+     $nginx_cmd
+     ;;
+   reload)
+    #重载配置文件
+    $nginx_cmd -s reload
+    ;;
+   status)
+    #显示服务的状态
+    if [ -f $nginx_pid_file ]; then
+       echo "Daemon nginx(PID `cat $nginx_pid_file`) is running"
+    else
+       echo "Daemon nginx is stopped"
+    fi
+    ;;
+   *)
+      echo "Usage: $(basename $0) {start|stop|restart|status|reload}"
+      ;;
+esac
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,528 @@
+shell逻辑控制语句
+
+	条件判断 
+	循环 
+	
+循环语句 
+
+	for/while/util
+
+1、循环的开始条件
+2、循环的操作
+3、循环的结束条件
+
+
+
+for循环 
+
+语法：
+
+for 变量 in 取值列表; do
+	操作语句
+	操作语句 
+done
+
+
+取值列表：
+
+	1、数字 
+		
+		10 20 30
+		seq 10
+		seq 2 10 
+	
+	2、字符串
+	3、文件
+		
+		用于遍历文件
+		cat file_name 
+		按空白区分行，处理每一行内容 
+
+
+示例01：计算1--100的和
+
+#!/bin/bash
+#
+
+sum=0
+
+for i in `seq 100`; do
+    let sum=$sum+$i
+done
+
+echo $sum
+	 
+
+示例02：计算1--100的奇数的和
+
+#!/bin/bash
+#
+
+sum=0
+
+for i in `seq 100`; do
+   let ys=i%2
+   if [ $ys -ne 0 ]; then
+      let sum=sum+i
+   fi
+done
+
+echo $sum
+
+
+示例03：检测172.16.50.0/24在线主机
+
+#!/bin/bash
+#
+
+network=172.16.50.
+
+for i in `seq 254`; do
+    {
+    if ping -c 1 -W 1 $network$i &> /dev/null; then
+        echo "Host $network$i is up"
+    fi
+    }&
+done
+wait
+
+
+示例03： 搜集所有在线IP及MAC地址 
+
+[root@localhost ~]# arping -c 1 -w 1 -I enp2s0 172.16.50.115
+
+
+
+
+
+示例04：批量创建用户user01---user10
+
+#!/bin/bash
+#
+
+for i in `seq 20`; do
+    if [ $i -le 9 ]; then
+       useradd user0$i
+       echo "123" | passwd --stdin user0$i &> /dev/null
+       echo "用户user0$i创建完成，初始密码是123"
+    else
+       useradd user$i
+       echo "123" | passwd --stdin user$i &> /dev/null
+       echo "用户user$i创建完成，初始密码是123"
+     fi
+       
+done
+
+
+
+
+示例05：向所有系统用户say hello
+
+#!/bin/bash
+#
+
+for name in $(awk -F: '{print $1}' /etc/passwd); do
+    echo "Hello, $name"
+done
+
+
+示例06：批量创建用户
+
+	batchuser.sh <file> 
+
+#!/bin/bash
+#
+
+if [ -z $1 ]; then
+   echo "Usage: $0 <file>"
+   exit 7
+fi
+
+if [ ! -e $1 ]; then
+   echo "File not found"
+   exit 8
+fi
+
+
+for i in `cat $1`; do
+   if ! id $i &> /dev/null; then
+      useradd $i
+      echo "123" | passwd --stdin $i &> /dev/null
+      echo "用户$i创建完成"
+   else
+      echo "用?
+
+
+
+示例07： 删除指定文件中的文件 
+
+	openssl rand -hex 10 
+
+
+
+
+示例08：实现批量的文件重命名
+
+#!/bin/bash
+#
+
+for i in $(find /tmp/bj -name "*.txt"); do
+    old_file_name=$(echo $i | awk -F. '{print $1}')
+    new_file_name=${old_file_name}.mp3
+    mv $i $new_file_name
+done
+
+
+
+
+示例09：分别统计/bin/bash、/sbin/nologin用户的个数 
+
+#!/bin/bash
+#
+
+bash_number=0
+nologin_number=0
+
+line_number=$(wc -l /etc/passwd | awk '{print $1}')
+
+for i in `seq $line_number`; do
+   sh_name=$(head -n $i /etc/passwd | tail -1 | awk -F: '{print $7}')
+   if [ $sh_name == "/bin/bash" ]; then
+      let bash_number++
+   elif [ $sh_name == "/sbin/nologin" ]; then
+      let nologin_number++
+   fi
+done
+
+echo "bash用户数量：$bash_number"
+echo "nologin用户数量：$nologin_number"
+
+
+
+
+for循环适用于明确知道循环的次数 
+
+
+
+
+
+中断循环的语句 
+
+	continue
+		中断本次循环，立即开始下一次循环 
+		
+	break
+		中断整个循环 
+		
+		
+#!/bin/bash
+#
+
+for i in `seq 5`; do
+   echo "第$i次循环开始"
+   if [ $i -eq 3 ]; then
+      break
+   fi
+   echo "======="
+   echo "第$i次循环结束"
+done
+
+
+
+
+
+
+while循环 
+
+用法1)
+
+while 条件; do
+	操作语句 
+	操作语句 
+	存在一条可以改变条件真假的语句
+done 
+
+
+#!/bin/bash
+#
+
+sum=0
+i=1
+
+while [ $i -le 100 ]; do
+   let sum=sum+i
+   let i++
+done
+
+echo $sum
+
+
+
+用法2) 
+
+while true; do 
+	操作语句 
+	操作语句  
+done 
+
+
+#!/bin/bash
+#
+
+while true; do
+    uptime
+    sleep 2
+done
+
+
+#!/bin/bash
+#
+
+while true; do
+   read -p "输入你的选择：" choice
+   if [ $choice == "q" ]; then
+      break
+   fi
+done
+
+
+
+用法3) 遍历文件 
+
+while read line; do
+	操作语句
+	操作语句
+done < file_name 
+
+
+#!/bin/bash
+#
+
+while read line; do
+   sh_name=$(echo $line | awk -F: '{print $7}')
+   echo $sh_name
+done < /etc/passwd
+
+
+
+======================================================================
+
+函数 
+
+	优势：
+		1) 方便代码重用 
+		2) 方便代码的扩展
+
+
+1、定义函数 
+
+方法1)
+
+函数名称() {
+	....
+	....
+	....
+}
+
+
+方法2)
+
+function 函数名称 {
+	....
+	....
+	....
+}
+
+
+2、调用函数
+
+	函数名称 
+
+
+
+示例01： 
+
+==========用户管理=========
+	1、添加用户
+	2、删除用户
+	3、修改用户shell
+	4、退出
+===========================
+
+
+#!/bin/bash
+#
+
+show_menu() {
+cat << eof
+==========用户管理=========
+	1、添加用户
+	2、删除用户
+	3、修改用户shell
+	4、退出
+===========================
+eof
+}
+
+
+add_user() {
+   read -p "Enter username: " name
+   if ! id $name &> /dev/null; then
+      useradd $name
+      echo "123" | passwd --stdin $name &> /dev/null
+      passwd -e $name &> /dev/null
+      echo "用户$name创建完成，初始密码是123"
+   else
+      echo "用户$name已经存在"
+   fi
+}
+
+remove_user() {
+    userdel -r $1
+    echo "用户$1删除完成"
+}
+
+
+modify_user_shell() {
+    read -p "Enter username: " name
+    old_shell_name=$(grep "^$name:" /etc/passwd | awk -F: '{print $7}')
+    echo "用户$name当前使用的shell: $old_shell_name"
+    echo
+    echo "系统当前支持的shell: "
+    cat -n /etc/shells
+    echo
+    read -p "输入新shell: " new_shell_name
+    usermod -s $new_shell_name $name
+}
+
+
+show_menu
+echo
+while true; do
+	read -p "输入你的选择：" choice
+	case $choice in 
+	   1)
+	     add_user
+	     ;;
+	   2)
+	     read -p "Enter username: " name
+	     remover_user $name
+	     ;;
+	   3)
+	     modify_user_shell
+	     ;;
+	   4)
+	     exit 0
+	     ;;
+	   *)
+	     echo "输入错误，请重试"
+             continue
+	     ;;
+	esac
+done
+
+
+
+
+
+
+
+shell对字符串处理的操作：
+
+1、获取字符串的长度
+
+[root@shell_server ~]# str_01="hello shell"
+[root@shell_server ~]# echo ${#str_01}
+11
+
+
+2、字符串的截取 
+
+[root@shell_server ~]# file_name=/etc/sysconfig/network
+
+[root@shell_server ~]# echo ${file_name:2:4}
+tc/s
+
+[root@shell_server ~]# echo ${file_name:2}
+tc/sysconfig/network
+
+
+
+
+数组 
+
+	一段连续的内存空间
+	
+定义数组
+
+[root@shell_server ~]# ip_list=(1.1.1.1 1.1.1.2 1.1.1.3 1.1.1.4)
+
+
+获取数组中的数据
+
+[root@shell_server ~]# echo ${ip_list[*]}
+1.1.1.1 1.1.1.2 1.1.1.3 1.1.1.4
+
+[root@shell_server ~]# echo ${ip_list[2]}
+1.1.1.3
+[root@shell_server ~]# echo ${ip_list[3]}
+1.1.1.4
+[root@shell_server ~]# echo ${ip_list[0]}
+
+
+
+
+作业：
+
+1、将/tmp/data01目录下的大于200K的文件复制到/tmp/data02 
+
+#!/bin/bash
+#
+
+for file_name in $(ls -l /etc | awk '{print $9}'); do
+	file_size=$(ls -l /etc | grep $file_name)
+	hh=$(echo $file_size | awk '{print $5}')
+	if [ $hh -ge 204800 ]; then
+		cp /etc/$file_name /eettcc200
+	fi
+done
+
+
+
+2、同步目录下的文件
+
+	md5sum  
+
+#!/bin/bash
+#
+
+for file_name in $(ls /bj); do
+	if ! [ -e /sh/$file_name ]; then
+		echo "/sh下没有$file_name文件,已经成功复制"
+		cp /bj/$file_name /sh/$file_name
+	fi
+    bj_md5=$(md5sum /bj/$file_name | awk '{print $1}')
+    sh_md5=$(md5sum /sh/$file_name | awk '{print $1}')
+	if [ $bj_md5 == $sh_md5 ]; then
+		echo "$file_name ok"
+	elif [ $bj_md5 != $sh_md5 ];then
+		echo "$file_name不一致，正在复制文件"
+		cp /bj/$file_name /sh/$file_name
+		sleep 1
+		echo "文件复制成功"
+	fi
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
